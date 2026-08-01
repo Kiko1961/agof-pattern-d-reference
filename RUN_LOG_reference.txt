@@ -1,0 +1,27 @@
+AGOF(TM) Pattern D - PUBLIC reference self-verification (policy stub; NO licensed engine)
+Command: make test
+Platform: Linux 6.18.5 x86_64 - reference run
+
+gcc -O2 -fPIC -shared -o libiouring_bypass.so iouring_bypass.c
+python3 -m pytest test_pattern_d_conformance.py -v
+============================= test session starts ==============================
+platform linux -- Python 3.11.15, pytest-9.1.1, pluggy-1.6.0 -- /usr/bin/python3
+cachedir: .pytest_cache
+rootdir: /tmp/agof-pattern-d-reference
+plugins: anyio-4.13.0
+collecting ... collected 12 items
+
+test_pattern_d_conformance.py::test_TD01_permit_write_mkdir PASSED       [  8%]
+test_pattern_d_conformance.py::test_TD02_permit_write_create_file PASSED [ 16%]
+test_pattern_d_conformance.py::test_TD03_permit_read_open PASSED         [ 25%]
+test_pattern_d_conformance.py::test_TD04_deny_write_out_of_scope PASSED  [ 33%]
+test_pattern_d_conformance.py::test_TD05_deny_path_traversal PASSED      [ 41%]
+test_pattern_d_conformance.py::test_TD06_deny_delete_action PASSED       [ 50%]
+test_pattern_d_conformance.py::test_TD07_deny_network_invoke PASSED      [ 58%]
+test_pattern_d_conformance.py::test_TD08_deny_process_spawn PASSED       [ 66%]
+test_pattern_d_conformance.py::test_TD09_bypass_fork_escape PASSED       [ 75%]
+test_pattern_d_conformance.py::test_TD10_bypass_thread_escape PASSED     [ 83%]
+test_pattern_d_conformance.py::test_TD11_bypass_raw_syscall_no_libc PASSED [ 91%]
+test_pattern_d_conformance.py::test_TD12_bypass_iouring_blocked PASSED   [100%]
+
+============================== 12 passed in 0.09s ==============================
