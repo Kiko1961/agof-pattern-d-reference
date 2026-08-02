@@ -6,8 +6,8 @@
 This file exists ONLY so the Pattern D enforcement MECHANISM (real Linux
 seccomp syscall interception, in pattern_d_kernel.py) can run standalone for
 public verification. It is a deliberately trivial policy: it does NOT contain
-the AGOF Evaluation Engine, the BIS / ECS / ACS scoring model, the cryptographic
-Agent Lineage chain, or any proprietary decision logic. Those remain licensed.
+the AGOF Evaluation Engine or any of its proprietary decision logic. That
+remains licensed and is demonstrated separately under NDA.
 
 What this stub decides (all it does):
   * action must be in the boundary's permitted_actions      -> else CONTAINED / ACTION_SCOPE_BREACH
@@ -50,8 +50,8 @@ def issuance_payload_hash(aeb: dict) -> str:
 
 # ---- minimal registry / store -------------------------------------------
 class AgentLineageStore:
-    """Inert audit sink. The real product keeps a cryptographic lineage chain;
-    this stub just holds records in memory so construction succeeds."""
+    """Inert audit sink. The real product keeps a durable audit chain; this stub
+    just holds records in memory so construction succeeds."""
 
     def __init__(self, path: str):
         self.path = path
@@ -128,4 +128,4 @@ class BEE:
     def _out(verdict, reason):
         return {"final_verdict": verdict,
                 "reason_code": reason,
-                "alr_id": str(uuid.uuid4())}   # placeholder id (no real lineage)
+                "alr_id": str(uuid.uuid4())}   # placeholder id (stub only)
