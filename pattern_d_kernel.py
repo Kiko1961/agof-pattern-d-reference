@@ -114,12 +114,16 @@ class KernelSupervisor:
             path="io_uring/"+name; action="INVOKE_API"
         else: path="?"; action="READ_DATA"
         if path.startswith("/") or ".." in path:
-            real=os.path.normpath(path)
+            _pp=os.path.realpath(os.path.dirname(path))
+            _base=os.path.basename(path.rstrip('/'))
+            _cand=os.path.join(_pp,_base)
+            real=os.path.realpath(_cand) if os.path.islink(_cand) else _cand
             try: rel=os.path.relpath(real,self.root)
             except ValueError: rel=real
             base=os.path.basename(real.rstrip("/"))
             rt=("res/"+base) if rel.startswith("res") else (("secret/"+base) if rel.startswith("secret") else ("other/"+base))
         else: rt=path
+        self._last_path=path if (path.startswith('/') or '..' in path) else None
         return name,action,rt
 
     def _evaluate(self,action,rt):
@@ -170,11 +174,17 @@ class KernelSupervisor:
                 name,action,rt=self._map(notif.data.nr,notif.data,notif.pid)
                 v=self._evaluate(action,rt)
                 resp=seccomp_notif_resp(id=notif.id,val=0,error=0,flags=0)
-                if v["final_verdict"]=="PERMITTED": resp.flags=SECCOMP_USER_NOTIF_FLAG_CONTINUE
+                eff_verdict=v["final_verdict"]; eff_reason=v.get("reason_code")
+                if v["final_verdict"]=="PERMITTED":
+                    ok=self._exec_supervisor_side(fd,notif,name,resp)
+                    if not ok:
+                        # openat2 refused (symlink/escape/parent-swap): downgrade
+                        eff_verdict="CONTAINED"; eff_reason="RESOURCE_SCOPE_BREACH"
+                        resp.val=0; resp.flags=0; resp.error=-errno.EPERM
                 else: resp.error=-errno.EPERM
                 libc.ioctl(fd,SEND,ctypes.byref(resp))
                 decisions.append({"syscall":name,"action":action,"resource":rt,
-                                  "verdict":v["final_verdict"],"reason":v.get("reason_code")})
+                                  "verdict":eff_verdict,"reason":eff_reason})
 
         while time.time()<deadline:
             select.select([fd,ps],[],[],0.2)
@@ -193,3 +203,67 @@ class KernelSupervisor:
             try: os.waitpid(pid,0)
             except ChildProcessError: pass
         return decisions
+
+# --- pin2 gold-standard additions -------------------------------------------
+SECCOMP_IOCTL_NOTIF_ADDFD=_IOC(1,0x21,3,24)
+NR_openat2=437; NR_mkdirat=258
+O_PATH=0o10000000; O_DIRECTORY=0o200000; O_NOFOLLOW=0o400000; O_CLOEXEC=0o2000000
+O_CREAT_=0o100; O_TMPFILE_=0o20200000
+RESOLVE_NO_SYMLINKS=0x04; RESOLVE_BENEATH=0x08; RESOLVE_NO_MAGICLINKS=0x02
+_SAFE=RESOLVE_BENEATH|RESOLVE_NO_SYMLINKS|RESOLVE_NO_MAGICLINKS
+class seccomp_notif_addfd(ctypes.Structure):
+    _fields_=[("id",ctypes.c_uint64),("flags",ctypes.c_uint32),("srcfd",ctypes.c_uint32),
+              ("newfd",ctypes.c_uint32),("newfd_flags",ctypes.c_uint32)]
+class open_how(ctypes.Structure):
+    _fields_=[("flags",ctypes.c_uint64),("mode",ctypes.c_uint64),("resolve",ctypes.c_uint64)]
+def _openat2(dirfd, rel, flags, mode, resolve):
+    h=open_how(flags,mode,resolve)
+    return libc.syscall(NR_openat2, dirfd, rel.encode(), ctypes.byref(h), ctypes.sizeof(h))
+def _addfd(notif_fd, notif_id, local_fd):
+    a=seccomp_notif_addfd(id=notif_id,flags=0,srcfd=local_fd,newfd=0,newfd_flags=0)
+    return libc.ioctl(notif_fd, SECCOMP_IOCTL_NOTIF_ADDFD, ctypes.byref(a))
+
+def _pin2_rootfd(self):
+    fd=getattr(self,"_rootfd",None)
+    if fd is None:
+        fd=os.open(self.root, O_PATH|O_DIRECTORY); self._rootfd=fd
+    return fd
+
+def _pin2_exec(self, notif_fd, notif, name, resp):
+    """Return True if executed & permitted; False if the safe resolver refused."""
+    path=getattr(self,"_last_path",None)
+    if path is None:  # non-path permitted syscall: no re-resolution risk
+        resp.flags=SECCOMP_USER_NOTIF_FLAG_CONTINUE; return True
+    root=self.root; rootfd=self._rootfd_get()
+    rel=os.path.relpath(os.path.normpath(path), root)
+    if rel.startswith(".."):  # outside root entirely
+        return False
+    try:
+        if name in ("mkdir","mkdirat"):
+            parent=os.path.dirname(rel) or "."
+            pfd=_openat2(rootfd, parent, O_PATH|O_DIRECTORY, 0, _SAFE)
+            if pfd<0: return False
+            try:
+                rc=libc.syscall(NR_mkdirat, pfd, os.path.basename(rel).encode(), 0o755)
+                if rc<0:
+                    e=ctypes.get_errno(); resp.error=-(e or errno.EACCES); resp.val=0; return True
+                resp.val=0; resp.error=0; return True
+            finally: os.close(pfd)
+        if name=="openat":
+            flags=notif.data.args[2]
+            # openat2 requires mode==0 unless O_CREAT/O_TMPFILE
+            mode=(notif.data.args[3] if (flags & (O_CREAT_|O_TMPFILE_)) else 0)
+            lf=_openat2(rootfd, rel, flags, mode, _SAFE)
+            if lf<0: return False
+            try:
+                child_fd=_addfd(notif_fd, notif.id, lf)
+                if child_fd<0: resp.error=-errno.EACCES
+                else: resp.val=child_fd; resp.error=0
+                return True
+            finally: os.close(lf)
+        # any other permitted syscall without a path arg
+        resp.flags=SECCOMP_USER_NOTIF_FLAG_CONTINUE; return True
+    except OSError as e:
+        resp.error=-(e.errno or errno.EACCES); return True
+KernelSupervisor._rootfd_get=_pin2_rootfd
+KernelSupervisor._exec_supervisor_side=_pin2_exec

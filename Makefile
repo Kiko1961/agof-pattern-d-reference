@@ -1,5 +1,5 @@
 # AGOF(TM) Pattern D - public self-verification reference
-# Targets: make lib (build io_uring primitive), make test (run the 12 tests)
+# Targets: make lib (build io_uring primitive), make test (run the 14 tests)
 PY ?= python3
 
 .PHONY: all lib test clean

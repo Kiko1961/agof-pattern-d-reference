@@ -160,3 +160,33 @@ def _try(fn):
     try: fn()
     except OSError as e:
         if e.errno != errno.EPERM: raise
+
+
+def test_TD13_toctou_symlink_window_closed(tmp_path_factory):
+    """CONTINUE re-resolution window (final-component symlink). Isolated fresh
+    supervisor so the verdict is order-independent: a symlink in the permitted
+    prefix -> secret/ must be judged on its REAL target as CONTAINED /
+    RESOURCE_SCOPE_BREACH, with nothing written under secret/."""
+    root=str(tmp_path_factory.mktemp("agof_td13"))
+    s=KernelSupervisor(root, governed_syscalls=SYS)
+    link=f"{root}/res/decoy_td13"; loot=f"{root}/secret/loot_td13"
+    os.symlink("../secret/loot_td13", link)
+    d=s.run(lambda r: _try(lambda: os.close(os.open(f"{r}/res/decoy_td13", O_WRONLY|O_CREAT, 0o644))))
+    v=_only(d,"openat")
+    assert v["verdict"]=="CONTAINED" and v["reason"]=="RESOURCE_SCOPE_BREACH"
+    assert not os.path.exists(loot)
+
+
+def test_TD14_toctou_parent_symlink_window_closed(tmp_path_factory):
+    """Harder variant: a PARENT component is a directory symlink (res/sub -> ../secret).
+    O_NOFOLLOW on the final hop alone would MISS this; openat2 RESOLVE_NO_SYMLINKS
+    catches the whole path. Isolated fresh supervisor -> deterministic CONTAINED /
+    RESOURCE_SCOPE_BREACH; nothing written under secret/."""
+    root=str(tmp_path_factory.mktemp("agof_td14"))
+    s=KernelSupervisor(root, governed_syscalls=SYS)
+    sub=f"{root}/res/sub_td14"; loot=f"{root}/secret/evil_td14"
+    os.symlink("../secret", sub)
+    d=s.run(lambda r: _try(lambda: os.close(os.open(f"{r}/res/sub_td14/evil_td14", O_WRONLY|O_CREAT, 0o644))))
+    v=_only(d,"openat")
+    assert v["verdict"]=="CONTAINED" and v["reason"]=="RESOURCE_SCOPE_BREACH"
+    assert not os.path.exists(loot)
