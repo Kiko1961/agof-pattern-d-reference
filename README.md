@@ -22,13 +22,15 @@ say: `14 passed`. That is the proof.
 
 ## What you need
 
-- A Windows PC — or a Linux computer.
-- About 10 minutes.
+- A **Windows 10 or 11** PC — or a Linux computer.
+- About 6 minutes.
 - Everything used is free.
 
 ## The only skill you need: copy → paste → Enter
 
-Every command in this guide sits in a gray box. Never type it. Instead:
+Every command in this guide sits in a gray box, except two short words
+you type yourself: `powershell` and `Ubuntu`. Never type a boxed
+command. Instead:
 
 1.  **Copy:** move the mouse over the gray box. A small icon appears at
     the **top-right corner of the box**. Click it once — that copies the
@@ -57,18 +59,23 @@ Already on Linux? Skip to Part 2. (A browser or online sandbox cannot
 run this demo — and that is the point: the protection lives in the
 operating system itself.)
 
-## Part 1 — Windows: turn on WSL2 (one time, ~10 min)
+## Part 1 — Windows: turn on WSL2 (one time, ~3 min)
 
 **Step 1. Open the Terminal window.**
 
-1.  Press the **Windows key**.
+1.  Press the **Windows key** — the key with the Windows logo (four
+    small squares), in the bottom row of the keyboard, between **Ctrl**
+    and **Alt**, left of the space bar.
 2.  Type `powershell`.
 3.  A search menu opens, with a **panel on its right side**. The panel
     shows the PowerShell logo and the words **Windows PowerShell**.
 4.  In that panel, below the name, there is a list of options: *Open*,
     *Run as Administrator*, *Run ISE as Administrator*… Click **Run as
     Administrator**.
-5.  If Windows asks for permission, click **Yes**.
+5.  If the right panel does not appear: right-click **Windows
+    PowerShell** in the results list and click **Run as
+    administrator**.
+6.  If Windows asks for permission, click **Yes**.
 
 A window for typing commands opens. This is the **Terminal window**.
 
@@ -77,17 +84,29 @@ A window for typing commands opens. This is the **Terminal window**.
 
     wsl --install
 
-What you will see: Windows installs Ubuntu (a Linux) by itself. If it
-asks to **restart** the PC, restart. After the restart, Ubuntu opens by
-itself. If it does not: press the **Windows key**, type `Ubuntu`, press
-**Enter**. When Ubuntu opens for the first time, it asks you to create a
-**username** and a **password**.
+What you will see, in this order:
 
-⚠️ While you type the password, the screen shows **nothing**. That is
-normal. Type it and press **Enter**.
+1.  Windows installs Ubuntu (a Linux) by itself.
+2.  If it asks to **restart** the PC: first press **Ctrl+D on your
+    keyboard** to bookmark this guide in your browser, so you can
+    reopen it after the restart. Then restart.
+3.  After the restart, Ubuntu opens by itself. If it does not: press
+    the **Windows key**, type `Ubuntu`, press **Enter**.
+4.  If typing `Ubuntu` finds nothing: open the Terminal window again
+    (Step 1) and run the Step 2 command again. It resumes where it
+    left off.
+5.  When Ubuntu opens for the first time, it asks you to create a
+    **username** and a **password**. ⚠️ While you type the password,
+    the screen shows **nothing**. That is normal. Type it and press
+    **Enter**.
+6.  If it asks *“Would you like to opt-in to platform metrics
+    collection? (Y/n)”*: type `n` and press **Enter**.
 
-You end at a line ending in `$`. That is the **Ubuntu window**. Keep it
-open.
+You end at a line ending in `$`. That is the **Ubuntu window**. From
+now on you will have **two windows open at the same time**: the
+**Terminal window** and the **Ubuntu window**. Keep both open — do not
+close either one. Switch from one to the other only when a step names
+the other window.
 
 **Step 3. Update Linux. Do not skip this.**
 
@@ -144,7 +163,9 @@ on your machine, in front of you.
 | What you see                               | What to do                                                                                 |
 |--------------------------------------------|--------------------------------------------------------------------------------------------|
 | The test **freezes** at the first case     | Linux is old. Do Part 1, Step 3 again. Run Command 3 again.                                |
+| “For security and performance, this mode of Windows only runs Microsoft-verified apps” | Windows is in **S mode**, which blocks PowerShell. Leave S mode (free, permanent): **Settings** (Windows key + I) → **System** → **Activation** → **Switch out of S mode** → **Go to the Store** → **Get**. Then do Step 1 again. |
 | `wsl: command not found`                   | You typed `wsl` in Ubuntu. It goes in the **Terminal window**.                             |
+| `uname`, `git` or `make` “is not recognized” | You typed it in the **Terminal window**. It goes in the **Ubuntu window**.               |
 | `git`, `make` or `pytest` “not found”      | Run Command 1 again and watch for errors.                                                  |
 | `Permission denied`                        | Run Command 2 again, exactly as written.                                                   |
 | Password shows nothing while typing        | Normal. Type it and press **Enter**.                                                       |
@@ -162,17 +183,6 @@ In plain words:
 - Tests 9–12: the classic escape tricks do not work either.
 - Tests 13–14: swapping a permitted file path for a forbidden one at the
   last instant is also caught.
-
-In technical terms: real Linux `seccomp` user-notification syscall
-interception. TD01–03 permit in-scope operations with real on-disk
-effect; TD04–08 deny out-of-scope `openat`/`unlink`/`connect`/`execve`
-with `EPERM` at the kernel; TD09–12 trap `fork`, thread, raw-syscall (no
-libc) and `io_uring` escape paths; TD13–14 close the check→use (TOCTOU)
-race on the permitted path — permitted operations execute
-supervisor-side via `openat2` with
-`RESOLVE_BENEATH | RESOLVE_NO_SYMLINKS | RESOLVE_NO_MAGICLINKS`, so the
-kernel never re-resolves an attacker-swapped path. TD13–14 fail against
-the previous build; they exist to prove the window is closed.
 
 ## Honest scope (read before you cite us)
 
