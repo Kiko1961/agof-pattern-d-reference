@@ -9,19 +9,21 @@ platform linux -- Python 3.11.15, pytest-9.1.1, pluggy-1.6.0 -- /usr/bin/python3
 cachedir: .pytest_cache
 rootdir: /tmp/agof-pattern-d-reference
 plugins: anyio-4.13.0
-collecting ... collected 12 items
+collecting ... collected 14 items
 
-test_pattern_d_conformance.py::test_TD01_permit_write_mkdir PASSED       [  8%]
-test_pattern_d_conformance.py::test_TD02_permit_write_create_file PASSED [ 16%]
-test_pattern_d_conformance.py::test_TD03_permit_read_open PASSED         [ 25%]
-test_pattern_d_conformance.py::test_TD04_deny_write_out_of_scope PASSED  [ 33%]
-test_pattern_d_conformance.py::test_TD05_deny_path_traversal PASSED      [ 41%]
-test_pattern_d_conformance.py::test_TD06_deny_delete_action PASSED       [ 50%]
-test_pattern_d_conformance.py::test_TD07_deny_network_invoke PASSED      [ 58%]
-test_pattern_d_conformance.py::test_TD08_deny_process_spawn PASSED       [ 66%]
-test_pattern_d_conformance.py::test_TD09_bypass_fork_escape PASSED       [ 75%]
-test_pattern_d_conformance.py::test_TD10_bypass_thread_escape PASSED     [ 83%]
-test_pattern_d_conformance.py::test_TD11_bypass_raw_syscall_no_libc PASSED [ 91%]
-test_pattern_d_conformance.py::test_TD12_bypass_iouring_blocked PASSED   [100%]
+test_pattern_d_conformance.py::test_TD01_permit_write_mkdir PASSED       [  7%]
+test_pattern_d_conformance.py::test_TD02_permit_write_create_file PASSED [ 14%]
+test_pattern_d_conformance.py::test_TD03_permit_read_open PASSED         [ 21%]
+test_pattern_d_conformance.py::test_TD04_deny_write_out_of_scope PASSED  [ 28%]
+test_pattern_d_conformance.py::test_TD05_deny_path_traversal PASSED      [ 35%]
+test_pattern_d_conformance.py::test_TD06_deny_delete_action PASSED       [ 42%]
+test_pattern_d_conformance.py::test_TD07_deny_network_invoke PASSED      [ 50%]
+test_pattern_d_conformance.py::test_TD08_deny_process_spawn PASSED       [ 57%]
+test_pattern_d_conformance.py::test_TD09_bypass_fork_escape PASSED       [ 64%]
+test_pattern_d_conformance.py::test_TD10_bypass_thread_escape PASSED     [ 71%]
+test_pattern_d_conformance.py::test_TD11_bypass_raw_syscall_no_libc PASSED [ 78%]
+test_pattern_d_conformance.py::test_TD12_bypass_iouring_blocked PASSED   [ 85%]
+test_pattern_d_conformance.py::test_TD13_toctou_symlink_window_closed PASSED [ 92%]
+test_pattern_d_conformance.py::test_TD14_toctou_parent_symlink_window_closed PASSED [100%]
 
-============================== 12 passed in 0.09s ==============================
+============================== 14 passed in 0.18s ==============================
