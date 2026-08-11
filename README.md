@@ -32,11 +32,10 @@ Every command in this guide sits in a gray box, except two short words
 you type yourself: `powershell` and `Ubuntu`. Never type a boxed
 command. Instead:
 
-1.  **Copy:** move the mouse over the gray box. A small icon appears at
-    the **top-right corner of the box**. Click it once — that copies the
-    whole command.
-2.  **Paste:** click inside the command window. Then **right-click**.
-    Right-click pastes.
+1.  **Copy:** the small copy icon is at the **top-right corner of the
+    gray box**. Left-click it once — that copies the whole command.
+2.  **Paste:** left-click inside the command window. Then
+    **right-click**. Right-click pastes.
 3.  **Press Enter.** Nothing happens until you press Enter.
 
 You will use two windows, and each step tells you which one:
@@ -177,9 +176,8 @@ on your machine, in front of you.
 In plain words:
 
 - Tests 1–3: the agent CAN do what it is allowed to do.
-- Tests 4–8: every forbidden action — writing outside its area,
-  deleting, reaching the network, launching programs — is stopped before
-  it happens.
+- Tests 4–8: actions outside what the agent is allowed to do are
+  stopped before they happen.
 - Tests 9–12: the classic escape tricks do not work either.
 - Tests 13–14: swapping a permitted file path for a forbidden one at the
   last instant is also caught.
@@ -191,12 +189,17 @@ resistance, driven by a non-normative stand-in policy. It does **not**
 include the licensed AGOF™ Evaluation Engine, hypervisor-level
 enforcement, or independent third-party red-team results. The check→use
 (TOCTOU) race reported in earlier revisions is **mitigated in this
-build** (see TD13–14); requires Linux 5.6 or newer. Governed permitted
+build** (see TD13–14); requires a recent Linux (kernel 6, which this
+guide installs). Governed permitted
 operations carry a modest latency premium — Pattern D is intended for
 high-assurance surfaces. It was exercised under WSL2 (a real Linux
 kernel, not bare-metal). We say all this plainly — overstating one’s own
 assurance is the exact failure mode AGOF™ exists to prevent. The engine
 and the full conformance matrix are shown under NDA.
+
+## A note on why this matters
+
+Read our short public note on AI agents — why prevention must come before detection. It is in this same repository — **left-click** **[Alert — AI Agents](ALERT.md)** and it opens on this page · **[Nota de alerta (español)](ALERT.md#nota-de-alerta--agentes-de-ia)**.
 
 © 2026 PRASOL LLC · AGOF™ Pattern D public reference · Code licensed
 under [Apache-2.0](LICENSE).
