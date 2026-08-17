@@ -26,6 +26,12 @@ say: `14 passed`. That is the proof.
 - About 6 minutes.
 - Everything used is free.
 
+## Is this safe for your computer?
+
+Yes. The whole demo runs inside the small Linux you install in Part 1 —
+a sealed box, separate from Windows. Nothing in this guide touches your
+programs, your files or your settings outside that box.
+
 ## The only skill you need: copy → paste → Enter
 
 Every command in this guide sits in a gray box, except two short words
